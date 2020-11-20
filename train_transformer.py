@@ -1,6 +1,6 @@
 import pandas as pd
 from sklearn.model_selection import train_test_split
-from transfomers import transform_remove_cid, transform_remove_mail_header
+from preprocessing.transforms import transform_remove_cid, transform_remove_mail_header
 
 val_size = 0.1
 
