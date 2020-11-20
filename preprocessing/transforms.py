@@ -12,3 +12,11 @@ def transform_remove_inline_js(x):
 def transform_remove_md5_hash(x):
     x = re.sub(r'MD5\:.{32}','',x)
     return x.strip()
+
+def get_all_body_transforms():
+    transforms = [
+        transform_remove_cid,
+        transform_remove_mail_header,
+        transform_remove_inline_js
+    ]
+    return transforms

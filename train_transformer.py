@@ -1,7 +1,7 @@
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from preprocessing.transforms import transform_remove_cid, transform_remove_mail_header
-from preprocessing.transforms import transform_remove_md5_hash
+from preprocessing.transforms import transform_remove_md5_hash, get_all_body_transforms
 from labels import get_id
 
 val_size = 0.1
@@ -24,7 +24,7 @@ def apply_label_transformer(df):
     df.ServiceProcessed = df['ServiceProcessed'].apply(lambda x: get_id(x))
     #df.ManualGroups = df[]
 
-def train_transformer_pipeline(data_dir, transforms=[]):
+def train_transformer_pipeline(data_dir, transforms=get_all_body_transforms()):
     train_set = pd.read_csv(data_dir / 'train.csv', delimiter=';')
     apply_transformers_subject(train_set)
     apply_label_transformer(train_set)
