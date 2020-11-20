@@ -1,7 +1,7 @@
 import pandas as pd
 from sklearn.model_selection import train_test_split
 
-val_size = 0.3
+val_size = 0.1
 
 
 def train_transformer_pipeline(data_dir):
