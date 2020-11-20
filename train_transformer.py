@@ -19,7 +19,7 @@ def transform_mail_subject(x):
 def apply_transformers_subject(df):
     df.MailSubject = df.MailSubject.apply(lambda x: transform_mail_subject(str(x)))
 def apply_label_transformer(df):
-    df.ServiceProcessed = df.ServiceProcessed.apply(lambda x: get_id(x))
+    df.ServiceProcessed = df['ServiceProcessed'].apply(lambda x: get_id(x))
 
 def train_transformer_pipeline(data_dir, transforms=[]):
     train_set = pd.read_csv(data_dir / 'train.csv', delimiter=';')
