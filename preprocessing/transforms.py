@@ -9,3 +9,6 @@ def transform_remove_mail_header(x):
 def transform_remove_inline_js(x):
     x = re.sub(r'\w\\\:\*.+\;\}', '', x)
     return x.strip()
+def transform_remove_md5_hash(x):
+    x = re.sub(r'MD5\:.{32}','',x)
+    return x.strip()

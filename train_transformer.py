@@ -1,6 +1,7 @@
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from preprocessing.transforms import transform_remove_cid, transform_remove_mail_header
+from preprocessing.transforms import transform_remove_md5_hash
 from labels import get_id
 
 val_size = 0.1
@@ -18,6 +19,7 @@ def transform_mail_subject(x):
 
 def apply_transformers_subject(df):
     df.MailSubject = df.MailSubject.apply(lambda x: transform_mail_subject(str(x)))
+    df.MailSubject = df.MailSubject.apply(lambda x: transform_remove_md5_hash(x))
 def apply_label_transformer(df):
     df.ServiceProcessed = df['ServiceProcessed'].apply(lambda x: get_id(x))
     #df.ManualGroups = df[]

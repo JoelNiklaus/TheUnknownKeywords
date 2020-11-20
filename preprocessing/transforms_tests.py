@@ -1,6 +1,7 @@
 # coding=utf-8
 from test_transforms import test_transform_
-from transforms import transform_remove_cid, transform_remove_mail_header, transform_remove_inline_js
+from transforms import transform_remove_cid, transform_remove_mail_header
+from transforms import transform_remove_inline_js, transform_remove_md5_hash
 
 cases = [
     ('[cid:image002.png@01d5f239.20062930]', ''),
@@ -28,3 +29,11 @@ cases = [
 ]
 
 test_transform_(cases, transform_remove_inline_js)
+
+cases = [
+    (
+        'FW: IT Support heute Nachmittag MD5:bc594d6bfdea74a2e40ba31d41444025',
+        'FW: IT Support heute Nachmittag')
+]
+
+test_transform_(cases, transform_remove_md5_hash)
