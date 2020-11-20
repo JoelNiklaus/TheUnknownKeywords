@@ -19,7 +19,7 @@ import wandb
 import torch
 from pprint import pprint
 
-
+import pandas as pd
 
 ROOT_DIR = Path(os.path.dirname(os.path.abspath(__file__)))
 DATA_DIR = ROOT_DIR / "data"
@@ -28,15 +28,15 @@ train_transformer_pipeline(DATA_DIR)  # preprocess csv files
 
 extension = ".json"
 
-train_path = DATA_DIR / ("train_trans"+extension)
-validation_path = DATA_DIR / ("validation_trans"+extension)
-test_path = DATA_DIR / ("test_trans"+extension)
+train_path = DATA_DIR / ("train_trans" + extension)
+validation_path = DATA_DIR / ("validation_trans" + extension)
+test_path = DATA_DIR / ("test_trans" + extension)
 
 
-def run(base_model="distilbert-base-german-cased", fine_tuned_checkpoint_name=None,
+def run(base_model="bert-base-german-cased", fine_tuned_checkpoint_name=None,
         dataset="joelito/sem_eval_2010_task_8",
-        input_col_name="MailSubject", label_col_name="ServiceProcessed",
-        num_train_epochs=10, do_train=False, do_eval=False, do_predict=True, test_set_sub_size=None, seed=42, ):
+        input_col_name="MailComplete", label_col_name="ServiceProcessed",
+        num_train_epochs=50, do_train=False, do_eval=False, do_predict=True, test_set_sub_size=None, seed=42, ):
     """
     Runs the specified transformer model
     :param base_model:             the name of the base model from huggingface transformers (e.g. roberta-base)
@@ -50,6 +50,7 @@ def run(base_model="distilbert-base-german-cased", fine_tuned_checkpoint_name=No
     :param seed:                        random seed for reproducibility
     :return:
     """
+    wandb.init()
 
     dir_path = os.path.dirname(os.path.realpath(__file__))
     local_model_name = f"{dir_path}/{base_model}-local"
@@ -58,7 +59,7 @@ def run(base_model="distilbert-base-german-cased", fine_tuned_checkpoint_name=No
     training_args = TrainingArguments(
         output_dir=f'{local_model_name}/results',  # output directory
         num_train_epochs=num_train_epochs,  # total number of training epochs
-        max_steps=10,  # Set to a small positive number to test models (training is short)
+        # max_steps=10,  # Set to a small positive number to test models (training is short)
         per_device_train_batch_size=6,  # batch size per device during training
         per_device_eval_batch_size=6,  # batch size for evaluation
         warmup_steps=500,  # number of warmup steps for learning rate scheduler
@@ -76,12 +77,9 @@ def run(base_model="distilbert-base-german-cased", fine_tuned_checkpoint_name=No
     )
 
     print("Loading Dataset")
-    #data = load_dataset('csv', data_files={'train': [train_path], 'validation': [validation_path], 'test': [test_path]}, delimiter=";")
-    data = load_dataset('json', data_files={'train': [train_path], 'validation': [validation_path], 'test': [test_path]}, field="data")
-    pprint(data)
-
-
-
+    # data = load_dataset('csv', data_files={'train': [train_path], 'validation': [validation_path], 'test': [test_path]}, delimiter=";")
+    #data = load_dataset('json', data_files={'train': [train_path], 'validation': [validation_path], 'test': [test_path]},field="data")
+    data = load_dataset('json', data_files={'train': [train_path], 'validation': [train_path], 'test': [test_path]}, field="data")
 
     model_path = base_model
     if fine_tuned_checkpoint_name:
@@ -125,12 +123,17 @@ def run(base_model="distilbert-base-german-cased", fine_tuned_checkpoint_name=No
 
     if do_predict:
         print(f"Predicting on test set")
+
+        data['test'].remove_columns_(['label'])
+
         if test_set_sub_size:
             # IMPORTANT: This command somehow may delete some features in the dataset!
             data['test'] = data['test'].select(indices=range(test_set_sub_size))
 
-        # save sentences because they will be removed by trainer.predict()
-        sentences = data['test'][0:-1][input_col_name]
+        # save inputs because they will be removed by trainer.predict()
+        ids = data['test'][0:]['Id']
+        subjects = data['test'][0:]['MailSubject']
+        textBody = data['test'][0:]['MailTextBody']
 
         predictions, label_ids, metrics = trainer.predict(data['test'])
         # rename metrics entries to test_{} for wandb
@@ -144,13 +147,20 @@ def run(base_model="distilbert-base-german-cased", fine_tuned_checkpoint_name=No
         prediction_ids = get_prediction_ids(predictions)  # get ids of predictions
         predicted_labels = [idx_to_labels_list[prediction_id] for prediction_id in
                             prediction_ids]  # get labels of predictions
-        correct_labels = [idx_to_labels_list[label_id] for label_id in label_ids]  # get labels of ground truth
+        # correct_labels = [idx_to_labels_list[label_id] for label_id in label_ids]  # get labels of ground truth
+
+        # create submissions csv file
+        df = pd.DataFrame(list(zip(ids, predicted_labels)),
+                          columns=['Id', 'Predicted'])
+        df.to_csv("submission2.csv", index=False)
 
         examples = random.sample(range(data['test'].num_rows), 5)  # look at five random examples from the dataset
         for i in examples:
-            print(f"\nSentence: {sentences[i]}")
-            print(f"Predicted Relation: {predicted_labels[i]}")
-            print(f"Ground Truth Relation: {correct_labels[i]}")
+            print(f"\nId: {ids[i]}")
+            print(f"Subject: {subjects[i]}")
+            print(f"Text: {textBody[i]}")
+            print(f"Predicted Label: {predicted_labels[i]}")
+            # print(f"Ground Truth Relation: {correct_labels[i]}")
 
 
 if __name__ == '__main__':
