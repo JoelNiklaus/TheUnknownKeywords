@@ -40,12 +40,14 @@ def train_transformer_pipeline(data_dir, transforms=get_all_body_transforms()):
     train_set['ManualGroups'] = labels['ManualGroups']
     train_set.drop(columns=['Unnamed: 0'], inplace=True)
 
-    train_csv, validation_trans = train_test_split(train_set, test_size=val_size)
-    train_csv.to_csv(data_dir / 'train_trans.csv', sep=';', index=False)
-    train_csv.to_json(data_dir / 'train_trans.json', orient='table')
+    train_set.to_csv(data_dir / 'train_trans.csv', sep=';', index=False)
+    train_set.to_json(data_dir / 'train_trans.json', orient='table')
+    #train_csv, validation_trans = train_test_split(train_set, test_size=val_size)
+    #train_csv.to_csv(data_dir / 'train_trans.csv', sep=';', index=False)
+    #train_csv.to_json(data_dir / 'train_trans.json', orient='table')
 
-    validation_trans.to_csv(data_dir / 'validation_trans.csv', sep=';', index=False)
-    validation_trans.to_json(data_dir / 'validation_trans.json', orient='table')
+    #validation_trans.to_csv(data_dir / 'validation_trans.csv', sep=';', index=False)
+    #validation_trans.to_json(data_dir / 'validation_trans.json', orient='table')
 
     test_set = pd.read_csv(data_dir / 'test_reduced.csv', delimiter=';')
     apply_transformers_subject(test_set)
