@@ -6,26 +6,33 @@ from labels import get_id
 
 val_size = 0.1
 
+
 def apply_transformers_body(df, transformers):
     if len(transformers) == 0:
         return
     for transformer in transformers:
         df.MailTextBody = df['MailTextBody'].apply(lambda x: transformer(x))
 
+
 def transform_mail_subject(x):
     if len(x) == 0:
         return 'no_content'
     return x
 
+
 def concat(df):
-  df['mailComplete']= df['MailSubject'] + ' '+ df['MailTextBody']
+    df['MailComplete'] = df['MailSubject'] + ' ' + df['MailTextBody']
+
 
 def apply_transformers_subject(df):
     df.MailSubject = df.MailSubject.apply(lambda x: transform_mail_subject(str(x)))
     df.MailSubject = df.MailSubject.apply(lambda x: transform_remove_md5_hash(x))
+
+
 def apply_label_transformer(df):
     df.ServiceProcessed = df['ServiceProcessed'].apply(lambda x: get_id(x))
-    #df.ManualGroups = df[]
+    # df.ManualGroups = df[]
+
 
 def train_transformer_pipeline(data_dir, transforms=get_all_body_transforms()):
     train_set = pd.read_csv(data_dir / 'train.csv', delimiter=';')
@@ -42,12 +49,12 @@ def train_transformer_pipeline(data_dir, transforms=get_all_body_transforms()):
 
     train_set.to_csv(data_dir / 'train_trans.csv', sep=';', index=False)
     train_set.to_json(data_dir / 'train_trans.json', orient='table')
-    #train_csv, validation_trans = train_test_split(train_set, test_size=val_size)
-    #train_csv.to_csv(data_dir / 'train_trans.csv', sep=';', index=False)
-    #train_csv.to_json(data_dir / 'train_trans.json', orient='table')
+    # train_csv, validation_trans = train_test_split(train_set, test_size=val_size)
+    # train_csv.to_csv(data_dir / 'train_trans.csv', sep=';', index=False)
+    # train_csv.to_json(data_dir / 'train_trans.json', orient='table')
 
-    #validation_trans.to_csv(data_dir / 'validation_trans.csv', sep=';', index=False)
-    #validation_trans.to_json(data_dir / 'validation_trans.json', orient='table')
+    # validation_trans.to_csv(data_dir / 'validation_trans.csv', sep=';', index=False)
+    # validation_trans.to_json(data_dir / 'validation_trans.json', orient='table')
 
     test_set = pd.read_csv(data_dir / 'test_reduced.csv', delimiter=';')
     apply_transformers_subject(test_set)
