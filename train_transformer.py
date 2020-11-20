@@ -17,8 +17,8 @@ def transform_mail_subject(x):
 
 def train_transformer_pipeline(data_dir, transforms=[]):
     train_set = pd.read_csv(data_dir / 'train.csv', delimiter=';')
-    train_set.MailSubject = train_set['MailSubject'].apply(lambda x: transform_mail_subject(x))
-    if len(transforms > 0):
+    train_set.MailSubject = train_set['MailSubject'].apply(lambda x: transform_mail_subject(str(x)))
+    if len(transforms) > 0:
         apply_transformers(train_set, transforms)
     train_set.MailSubject = train_set['MailSubject'].apply(lambda x: transform_mail_subject(x))
     labels = train_set[['ServiceProcessed', 'ManualGroups']].copy()
@@ -35,8 +35,8 @@ def train_transformer_pipeline(data_dir, transforms=[]):
     validation_trans.to_json(data_dir / 'validation_trans.json', orient='table')
 
     test_set = pd.read_csv(data_dir / 'test_reduced.csv', delimiter=';')
-    test_set.MailSubject = test_set['MailSubject'].apply(lambda x: transform_mail_subject(x))
-    if len(transforms > 0):
+    test_set.MailSubject = test_set['MailSubject'].apply(lambda x: transform_mail_subject(str(x)))
+    if len(transforms) > 0:
         apply_transformers(test_set, transforms)
     test_set['ServiceProcessed'] = ' '
     test_set['ManualGroups'] = ' '
