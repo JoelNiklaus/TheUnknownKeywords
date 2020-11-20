@@ -2,10 +2,7 @@ import os
 import random
 from pathlib import Path
 
-import fire
-import wandb
-
-from train_transformer import train_transformer_pipeline
+from labels import id2label, label2id, idx_to_labels_list
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3"  # do this to remove gpu with full memory (MUST be before torch import)
 os.environ["TOKENIZERS_PARALLELISM"] = "true"  # used for disabling warning (BUT: if deadlock occurs, remove this)
@@ -14,39 +11,31 @@ from transformers import EvaluationStrategy, AutoModelForSequenceClassification,
 from transformers import Trainer, TrainingArguments
 
 from datasets import load_dataset
+from train_transformer import train_transformer_pipeline
 
 from util import make_reproducible, compute_metrics, get_prediction_ids
-
+import fire
+import wandb
+import torch
 from pprint import pprint
 
-label_set = ['EDA_ANW_ARIS (EDA Scout)', 'EDA_ANW_ARS Remedy', 'EDA_ANW_CH@World (MOSS)', 'EDA_ANW_CodX PostOffice',
-             'EDA_ANW_DMS Fabasoft eGov Suite', 'EDA_ANW_EDA PWC Tool', 'EDA_ANW_EDAContacts', 'EDA_ANW_EDAssist+',
-             'EDA_ANW_FDFA Security App', 'EDA_ANW_IAM Tool EDA', 'EDA_ANW_ITDoc Sharepoint', 'EDA_ANW_Internet EDA',
-             'EDA_ANW_Intranet/Collaboration EDA', 'EDA_ANW_MOVE!', 'EDA_ANW_NOS:4', 'EDA_ANW_ORBIS',
-             'EDA_ANW_Office Manager', 'EDA_ANW_Plato-HH', 'EDA_ANW_Reisehinweise', 'EDA_ANW_SAP Services',
-             'EDA_ANW_SysP eDoc', 'EDA_ANW_ZACWEB', 'EDA_ANW_Zeiterfassung SAP', 'EDA_ANW_Zentrale Raumreservation EDA',
-             'EDA_ANW_at Honorarvertretung', 'EDA_ANW_eVERA', 'EDA_S_APS', 'EDA_S_APS_Monitor', 'EDA_S_APS_OS_BasisSW',
-             'EDA_S_APS_PC', 'EDA_S_APS_Peripherie', 'EDA_S_Arbeitsplatzdrucker', 'EDA_S_BA_2FA', 'EDA_S_BA_Account',
-             'EDA_S_BA_Datenablage', 'EDA_S_BA_Internetzugriff', 'EDA_S_BA_Mailbox', 'EDA_S_BA_RemoteAccess',
-             'EDA_S_BA_ServerAusland', 'EDA_S_BA_UCC_Benutzertelefonie', 'EDA_S_BA_UCC_IVR', 'EDA_S_Backup & Restore',
-             'EDA_S_Benutzerunterstützung', 'EDA_S_Betrieb Übermitttlungssysteme', 'EDA_S_Büroautomation',
-             'EDA_S_IT Sicherheit', 'EDA_S_Mobile Kommunikation', 'EDA_S_Netzdrucker', 'EDA_S_Netzwerk Ausland',
-             'EDA_S_Netzwerk Inland', 'EDA_S_Order Management', 'EDA_S_Peripheriegeräte', 'EDA_S_Raumbewirtschaftung',
-             'EDA_S_Zusätzliche Software', '_Pending']
+
 
 ROOT_DIR = Path(os.path.dirname(os.path.abspath(__file__)))
 DATA_DIR = ROOT_DIR / "data"
 
 train_transformer_pipeline(DATA_DIR)  # preprocess csv files
 
-train_path = DATA_DIR / "train_trans.csv"
-validation_path = DATA_DIR / "validation_trans.csv"
-test_path = DATA_DIR / "test_trans.csv"
+extension = ".json"
+
+train_path = DATA_DIR / ("train_trans"+extension)
+validation_path = DATA_DIR / ("validation_trans"+extension)
+test_path = DATA_DIR / ("test_trans"+extension)
 
 
 def run(base_model="distilbert-base-german-cased", fine_tuned_checkpoint_name=None,
         dataset="joelito/sem_eval_2010_task_8",
-        input_col_name="MailTextBody", label_col_name="ServiceProcessed",
+        input_col_name="MailSubject", label_col_name="ServiceProcessed",
         num_train_epochs=10, do_train=False, do_eval=False, do_predict=True, test_set_sub_size=None, seed=42, ):
     """
     Runs the specified transformer model
@@ -69,7 +58,7 @@ def run(base_model="distilbert-base-german-cased", fine_tuned_checkpoint_name=No
     training_args = TrainingArguments(
         output_dir=f'{local_model_name}/results',  # output directory
         num_train_epochs=num_train_epochs,  # total number of training epochs
-        max_steps=-1,  # Set to a small positive number to test models (training is short)
+        max_steps=10,  # Set to a small positive number to test models (training is short)
         per_device_train_batch_size=6,  # batch size per device during training
         per_device_eval_batch_size=6,  # batch size for evaluation
         warmup_steps=500,  # number of warmup steps for learning rate scheduler
@@ -87,13 +76,12 @@ def run(base_model="distilbert-base-german-cased", fine_tuned_checkpoint_name=No
     )
 
     print("Loading Dataset")
-    data = load_dataset('csv', data_files={'train': [train_path], 'validation': [validation_path], 'test': [test_path]},
-                        delimiter=";")
+    #data = load_dataset('csv', data_files={'train': [train_path], 'validation': [validation_path], 'test': [test_path]}, delimiter=";")
+    data = load_dataset('json', data_files={'train': [train_path], 'validation': [validation_path], 'test': [test_path]}, field="data")
     pprint(data)
 
-    idx_to_labels_list = label_set  # list to look up the label indices
-    id2label = {k: v for k, v in enumerate(idx_to_labels_list)}
-    label2id = {v: k for k, v in enumerate(idx_to_labels_list)}
+
+
 
     model_path = base_model
     if fine_tuned_checkpoint_name:
