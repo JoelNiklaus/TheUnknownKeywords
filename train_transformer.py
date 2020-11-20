@@ -20,6 +20,7 @@ def apply_transformers_subject(df):
     df.MailSubject = df.MailSubject.apply(lambda x: transform_mail_subject(str(x)))
 def apply_label_transformer(df):
     df.ServiceProcessed = df['ServiceProcessed'].apply(lambda x: get_id(x))
+    #df.ManualGroups = df[]
 
 def train_transformer_pipeline(data_dir, transforms=[]):
     train_set = pd.read_csv(data_dir / 'train.csv', delimiter=';')
@@ -46,7 +47,7 @@ def train_transformer_pipeline(data_dir, transforms=[]):
     if len(transforms) > 0:
         apply_transformers(test_set, transforms)
     test_set['ServiceProcessed'] = -1
-    test_set['ManualGroups'] = -1
+    test_set['ManualGroups'] = '-1'
     test_set.drop(columns=['Unnamed: 0'], inplace=True)
     test_set.to_csv(data_dir / 'test_trans.csv', sep=';', index=False)
     test_set.to_json(data_dir / 'test_trans.json', orient='table')
