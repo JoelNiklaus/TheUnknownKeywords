@@ -10,11 +10,17 @@ def apply_transformers(df, transformers):
     for transformer in transformers:
         df.MailTextBody = df['MailTextBody'].apply(lambda x: transformer(x))
 
+def transform_mail_subject(x):
+  if len(x) == 0:
+    return 'no_content'
+  return x
 
 def train_transformer_pipeline(data_dir, transforms=[]):
     train_set = pd.read_csv(data_dir / 'train.csv', delimiter=';')
+    train_set.MailSubject = train_set['MailSubject'].apply(lambda x: transform_mail_subject(x))
     if len(transforms > 0):
         apply_transformers(train_set, transforms)
+    train_set.MailSubject = train_set['MailSubject'].apply(lambda x: transform_mail_subject(x))
     labels = train_set[['ServiceProcessed', 'ManualGroups']].copy()
     train_set.drop(columns=['Impact', 'Urgency', 'IncidentType', 'ServiceProcessed', 'ManualGroups'], inplace=True)
     train_set['ServiceProcessed'] = labels['ServiceProcessed']
@@ -29,6 +35,7 @@ def train_transformer_pipeline(data_dir, transforms=[]):
     validation_trans.to_json(data_dir / 'validation_trans.json', orient='table')
 
     test_set = pd.read_csv(data_dir / 'test_reduced.csv', delimiter=';')
+    test_set.MailSubject = test_set['MailSubject'].apply(lambda x: transform_mail_subject(x))
     if len(transforms > 0):
         apply_transformers(test_set, transforms)
     test_set['ServiceProcessed'] = ' '
