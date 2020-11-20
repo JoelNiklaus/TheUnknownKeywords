@@ -5,6 +5,8 @@ from pathlib import Path
 import fire
 import wandb
 
+from train_transformer import train_transformer_pipeline
+
 os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3"  # do this to remove gpu with full memory (MUST be before torch import)
 os.environ["TOKENIZERS_PARALLELISM"] = "true"  # used for disabling warning (BUT: if deadlock occurs, remove this)
 
@@ -33,9 +35,13 @@ label_set = ['EDA_ANW_ARIS (EDA Scout)', 'EDA_ANW_ARS Remedy', 'EDA_ANW_CH@World
              'EDA_S_Zusätzliche Software', '_Pending']
 
 ROOT_DIR = Path(os.path.dirname(os.path.abspath(__file__)))
-DATASET_DIR = ROOT_DIR / "data"
-train_path = DATASET_DIR / "train_trans.csv"
-test_path = DATASET_DIR / "test_trans.csv"
+DATA_DIR = ROOT_DIR / "data"
+
+train_transformer_pipeline(DATA_DIR)  # preprocess csv files
+
+train_path = DATA_DIR / "train_trans.csv"
+validation_path = DATA_DIR / "validation_trans.csv"
+test_path = DATA_DIR / "test_trans.csv"
 
 
 def run(base_model="distilbert-base-german-cased", fine_tuned_checkpoint_name=None,
@@ -81,7 +87,8 @@ def run(base_model="distilbert-base-german-cased", fine_tuned_checkpoint_name=No
     )
 
     print("Loading Dataset")
-    data = load_dataset('csv', data_files={'train': [train_path], 'test': [test_path]}, delimiter=";")
+    data = load_dataset('csv', data_files={'train': [train_path], 'validation': [validation_path], 'test': [test_path]},
+                        delimiter=";")
     pprint(data)
 
     idx_to_labels_list = label_set  # list to look up the label indices
@@ -135,7 +142,7 @@ def run(base_model="distilbert-base-german-cased", fine_tuned_checkpoint_name=No
             data['test'] = data['test'].select(indices=range(test_set_sub_size))
 
         # save sentences because they will be removed by trainer.predict()
-        sentences = data['test'][0:-1]['sentence']
+        sentences = data['test'][0:-1][input_col_name]
 
         predictions, label_ids, metrics = trainer.predict(data['test'])
         # rename metrics entries to test_{} for wandb

@@ -127,3 +127,12 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# JetBrains
+.idea
+
+# Data
+data
+
+
+doc
