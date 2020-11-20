@@ -11,7 +11,7 @@ def save_df(df, output_file):
     if output_file == None:
         print('Please provide an output file name')
         return
-    df.to_csv(output_file, index=False)
+    df.to_csv(output_file, index=False, sep=';')
 
 def preprocess_and_produce_dfs(input_file='data/train.csv'):
     df = load_data(input_file)
