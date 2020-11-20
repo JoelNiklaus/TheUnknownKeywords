@@ -17,6 +17,9 @@ def transform_mail_subject(x):
         return 'no_content'
     return x
 
+def concat(df):
+  df['mailComplete']= df['MailSubject'] + ' '+ df['MailTextBody']
+
 def apply_transformers_subject(df):
     df.MailSubject = df.MailSubject.apply(lambda x: transform_mail_subject(str(x)))
     df.MailSubject = df.MailSubject.apply(lambda x: transform_remove_md5_hash(x))
@@ -30,7 +33,7 @@ def train_transformer_pipeline(data_dir, transforms=get_all_body_transforms()):
     apply_label_transformer(train_set)
     if len(transforms) > 0:
         apply_transformers_body(train_set, transforms)
-    train_set.MailSubject = train_set['MailSubject'].apply(lambda x: transform_mail_subject(x))
+    concat(train_set)
     labels = train_set[['ServiceProcessed', 'ManualGroups']].copy()
     train_set.drop(columns=['Impact', 'Urgency', 'IncidentType', 'ServiceProcessed', 'ManualGroups'], inplace=True)
     train_set['ServiceProcessed'] = labels['ServiceProcessed']
@@ -46,6 +49,7 @@ def train_transformer_pipeline(data_dir, transforms=get_all_body_transforms()):
 
     test_set = pd.read_csv(data_dir / 'test_reduced.csv', delimiter=';')
     apply_transformers_subject(test_set)
+    concat(test_set)
     if len(transforms) > 0:
         apply_transformers_body(test_set, transforms)
     test_set['ServiceProcessed'] = 0
