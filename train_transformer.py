@@ -1,6 +1,7 @@
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from preprocessing.transforms import transform_remove_cid, transform_remove_mail_header
+from labels import get_id
 
 val_size = 0.1
 
@@ -11,13 +12,19 @@ def apply_transformers(df, transformers):
         df.MailTextBody = df['MailTextBody'].apply(lambda x: transformer(x))
 
 def transform_mail_subject(x):
-  if len(x) == 0:
-    return 'no_content'
-  return x
+    if len(x) == 0:
+        return 'no_content'
+    return x
+
+def apply_transformers_subject(df):
+    df.MailSubject = df.MailSubject.apply(lambda x: transform_mail_subject(str(x)))
+def apply_label_transformer(df):
+    df.ServiceProcessed = df.ServiceProcessed.apply(lambda x: get_id(x))
 
 def train_transformer_pipeline(data_dir, transforms=[]):
     train_set = pd.read_csv(data_dir / 'train.csv', delimiter=';')
-    train_set.MailSubject = train_set['MailSubject'].apply(lambda x: transform_mail_subject(str(x)))
+    apply_transformers_subject(train_set)
+    apply_label_transformer(train_set)
     if len(transforms) > 0:
         apply_transformers(train_set, transforms)
     train_set.MailSubject = train_set['MailSubject'].apply(lambda x: transform_mail_subject(x))
@@ -35,7 +42,8 @@ def train_transformer_pipeline(data_dir, transforms=[]):
     validation_trans.to_json(data_dir / 'validation_trans.json', orient='table')
 
     test_set = pd.read_csv(data_dir / 'test_reduced.csv', delimiter=';')
-    test_set.MailSubject = test_set['MailSubject'].apply(lambda x: transform_mail_subject(str(x)))
+    apply_transformers_subject(test_set)
+    apply_label_transformer(test_set)
     if len(transforms) > 0:
         apply_transformers(test_set, transforms)
     test_set['ServiceProcessed'] = ' '
