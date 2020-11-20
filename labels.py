@@ -15,3 +15,6 @@ label_set = ['EDA_ANW_ARIS (EDA Scout)', 'EDA_ANW_ARS Remedy', 'EDA_ANW_CH@World
 idx_to_labels_list = label_set  # list to look up the label indices
 id2label = {k: v for k, v in enumerate(idx_to_labels_list)}
 label2id = {v: k for k, v in enumerate(idx_to_labels_list)}
+
+def get_id(label):
+  return label2id[label]
