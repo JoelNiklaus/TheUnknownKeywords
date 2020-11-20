@@ -70,7 +70,7 @@ def train_transformer_pipeline(data_dir, transforms=get_all_body_transforms()):
     if len(transforms) > 0:
         apply_transformers_body(test_set, transforms)
     test_set['ServiceProcessed'] = 0
-    test_set['ManualGroups'] = '-1'
+    test_set['ManualGroups'] = 0
     test_set.drop(columns=['Unnamed: 0'], inplace=True)
     test_set.to_csv(data_dir / 'test_trans.csv', sep=';', index=False)
     test_set.to_json(data_dir / 'test_trans.json', orient='table')
