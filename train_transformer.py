@@ -3,6 +3,7 @@ from sklearn.model_selection import train_test_split
 from preprocessing.transforms import transform_remove_cid, transform_remove_mail_header
 from preprocessing.transforms import transform_remove_md5_hash, get_all_body_transforms
 from labels import get_id
+from labels_manual_groups import get_id as man_id
 
 val_size = 0.1
 
@@ -50,6 +51,7 @@ def train_transformer_pipeline(data_dir, transforms=get_all_body_transforms()):
     train_set.to_csv(data_dir / 'train_trans.csv', sep=';', index=False)
     train_set.to_json(data_dir / 'train_trans.json', orient='table')
     manual_set = train_set.dropna()
+    manual_set.ManualGroups = manual_set.ManualGroups.apply(lambda x: man_id(x))
     manual_set.to_csv(data_dir / 'manual_trans.csv', sep=';', index=False)
     manual_set.to_json(data_dir / 'manual_trans.json', orient='table')
     #train_csv, validation_trans = train_test_split(train_set, test_size=val_size)
