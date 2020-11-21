@@ -1,6 +1,7 @@
  # coding=utf-8
 
 label_set = [
+  'nothing',
   'Smart_Device___MDM', 'Benutzeranleitungen_Telefonie', 'Notebook', 'Outlook', 'Drucker___Multifunktionsgeräte_',
   'Standalone', 'Word', 'SAP_Online_Support', 'Interactive_Voice_Response__IVR_', 'Bestellungen', 'Intranet', 'eSysp___Biometrie',
   'Software_Center', 'Keepass', 'CH@WORLD', 'Informatiksicherheit', 'PDF_', 'Mitnahme_der_persönlichen_Daten_bei_Versetzung', 'Word|PDF_',

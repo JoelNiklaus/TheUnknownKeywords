@@ -32,7 +32,8 @@ def apply_transformers_subject(df):
 
 def apply_label_transformer(df):
     df.ServiceProcessed = df['ServiceProcessed'].apply(lambda x: get_id(x))
-    # df.ManualGroups = df[]
+    df.fillna("nothing", inplace=True)
+    df.ManualGroups = df.ManualGroups.apply(lambda x: man_id(x))
 
 
 def train_transformer_pipeline(data_dir, transforms=get_all_body_transforms()):
@@ -50,8 +51,8 @@ def train_transformer_pipeline(data_dir, transforms=get_all_body_transforms()):
 
     train_set.to_csv(data_dir / 'train_trans.csv', sep=';', index=False)
     train_set.to_json(data_dir / 'train_trans.json', orient='table')
+
     manual_set = train_set.dropna()
-    manual_set.ManualGroups = manual_set.ManualGroups.apply(lambda x: man_id(x))
     manual_set.to_csv(data_dir / 'manual_trans.csv', sep=';', index=False)
     manual_set.to_json(data_dir / 'manual_trans.json', orient='table')
     #train_csv, validation_trans = train_test_split(train_set, test_size=val_size)

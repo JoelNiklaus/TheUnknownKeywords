@@ -4,7 +4,7 @@ from pathlib import Path
 
 from labels import id2label, label2id, idx_to_labels_list
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3"  # do this to remove gpu with full memory (MUST be before torch import)
+os.environ["CUDA_VISIBLE_DEVICES"] = "2,3"  # do this to remove gpu with full memory (MUST be before torch import)
 os.environ["TOKENIZERS_PARALLELISM"] = "true"  # used for disabling warning (BUT: if deadlock occurs, remove this)
 
 from transformers import EvaluationStrategy, AutoModelForSequenceClassification, AutoTokenizer
@@ -33,10 +33,10 @@ validation_path = DATA_DIR / ("validation_trans" + extension)
 test_path = DATA_DIR / ("test_trans" + extension)
 
 
-def run(base_model="bert-base-german-cased", fine_tuned_checkpoint_name=None,
+def run(base_model="dbmdz/bert-base-german-uncased", fine_tuned_checkpoint_name=None,
         dataset="joelito/sem_eval_2010_task_8",
         input_col_name="MailComplete", label_col_name="ServiceProcessed",
-        num_train_epochs=50, do_train=False, do_eval=False, do_predict=True, test_set_sub_size=None, seed=42, ):
+        num_train_epochs=100, do_train=False, do_eval=False, do_predict=True, test_set_sub_size=None, seed=42, ):
     """
     Runs the specified transformer model
     :param base_model:             the name of the base model from huggingface transformers (e.g. roberta-base)
@@ -67,7 +67,7 @@ def run(base_model="bert-base-german-cased", fine_tuned_checkpoint_name=None,
         logging_dir=f'{local_model_name}/logs',  # directory for storing logs
         logging_steps=10,
         save_steps=500,
-        eval_steps=100,
+        eval_steps=250,
         evaluation_strategy=EvaluationStrategy.STEPS,
         seed=seed,
         run_name=base_model,  # used for wandb
@@ -89,7 +89,7 @@ def run(base_model="bert-base-german-cased", fine_tuned_checkpoint_name=None,
     model = AutoModelForSequenceClassification.from_pretrained(model_path, id2label=id2label, label2id=label2id,
                                                                finetuning_task=dataset)
     print("Loading Tokenizer")
-    tokenizer = AutoTokenizer.from_pretrained(model_path)
+    tokenizer = AutoTokenizer.from_pretrained(base_model)
 
     print("Tokenizing Dataset")
     # supervised_keys = data['train'].supervised_keys  # 'sentence' and 'relation'
@@ -152,7 +152,7 @@ def run(base_model="bert-base-german-cased", fine_tuned_checkpoint_name=None,
         # create submissions csv file
         df = pd.DataFrame(list(zip(ids, predicted_labels)),
                           columns=['Id', 'Predicted'])
-        df.to_csv("submission2.csv", index=False)
+        df.to_csv("submission6.csv", index=False)
 
         examples = random.sample(range(data['test'].num_rows), 5)  # look at five random examples from the dataset
         for i in examples:
